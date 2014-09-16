@@ -108,6 +108,22 @@ Select the variant that you meant to play by appending the number sign "#" and t
     ./solve.py example1 lens#1   
     
     
+Colors
+------
+
+In the ANSI-colored board display, the following colors are used:
+
+- WHITE  on BLUE: your occupied field
+- YELLOW on RED : suggested move
+- CYAN   on RED : suggested move (neuralgic point!)
+
+- CYAN on BLACK : unoccupied field - neuralgic point
+- GRAY on BLACK : unoccupied field - no attacks
+
+- GRAY on YELLOW: enemy occupied field
+- RED  on YELLOW: enemy occupied field (neuralgic point!) 
+
+    
     
 Analysis
 ========
