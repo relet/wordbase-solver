@@ -9,7 +9,11 @@ Installation
 
 Just clone and run. 
 
-Python module requirements: sqlite3
+    git clone https://github.com/relet/wordbase-solver.git
+    cd wordbase-solver
+    ./solve.py gamefile
+
+Requires a python interpreter and the following modules: sqlite3
 
 
 Usage
