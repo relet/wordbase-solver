@@ -207,7 +207,7 @@ Examples:
 
 
 
+Known issues
+============
 
-
-
-
+- If the opponent has one strong but obscure move, the suggestions may seem to be weak. If your opponent is playing a perfect game, this is a reasonable assumption. If you are playing against humans, a strong move that only has an obscure counter may be a better strategy. 
