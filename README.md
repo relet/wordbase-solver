@@ -34,10 +34,11 @@ After a moment of thinking, it will then present you with an ANSI-colored displa
     27174 SPONSAL DENOMINAL [(0, 3), (1, 4), (2, 5), (3, 5), (3, 6), (4, 6), (4, 5)]
     
 This is essentially the summary of the analysis. 
-# The first number is the scoring of this move. If it increases, you are gainging in dominance on the board. If it decreases, you are losing dominance of the board. 
-# The first word is your best move. 
-# The second word is the best counter move the opponent can play, based on the remaining steps of the minmax analysis. This may vary if you actually run the more detailed three-step analysis for the opponent.
-# If you get a list of coordinates, this means that your word may be played in various ways on the board. In order to help you identify the correct combination, refer to the visual board or this list. 
+
+- The first number is the scoring of this move. If it increases, you are gainging in dominance on the board. If it decreases, you are losing dominance of the board. 
+- The first word is your best move. 
+- The second word is the best counter move the opponent can play, based on the remaining steps of the minmax analysis. This may vary if you actually run the more detailed three-step analysis for the opponent.
+- If you get a list of coordinates, this means that your word may be played in various ways on the board. In order to help you identify the correct combination, refer to the visual board or this list. 
 
 You may also get one of the following messages:
 
