@@ -109,6 +109,81 @@ Select the variant that you meant to play by appending the number sign "#" and t
     
     
     
+Analysis
+========
+
+This solver works by assigning a score to every field of the board. The actual numbers may be set in the program.
+
+- Fields on the base line are worth lots of points. If a player occupies these, the game ends. 
+- Any field from which you can reach either base line in one move is worth many points. These are the fields you want to attack or defend. I call these *neuralgic points*. Any winning move is called an *attack* or a *threat*, depending on who is able to play it. Longer attacks from the center of the board are worth more points.
+- Any field from which you can reach a neuralgic points is worth a little more than a regular field. 
+- Regular fields get their score based on how many possible words start on this location. Fields which allow you to play a lot of new words are worth more points.
+
+Based on this scoring, the wordbase-solver runs a minmax analysis. This is set to a depth of three steps (your move, opponent's counter, your best counter) which runs fine on a regular desktop machine. If you have access to a better computer, or manage to optimize the code, you can increase the number of steps. 
+
+
+
+Utilities and Dictionaries
+==========================
+
+The repository currently includes two dictionaries.
+
+- *twl* is the TWL06 scrabble word list. This one seems to be a good enough match with the internal wordbase dictionary for English. Of course, we can only guess.
+- *no* is a Norwegian word list based on "NSF-ordlisten". Again, a reasonable match. 
+ 
+Should you find that a word is not in the dictionary, or a word is suggested by the solver but not recognized by wordbase, you can edit your local copy of the wordlist with the following utilities. *Remember to delete the game's .idx file in order to re-analyze the possible moves* before you run the solver again.
+
+addword.py
+----------
+
+    ./addword dict/twl newword
+    
+Adds a word to the word list.
+
+rmword.py
+----------
+
+    ./rmword dict/twl notrecognized
+    
+Removes a word from the word list.
+
+find.py
+----------
+
+This is essentially an earlier, more simplistic one step solver. It just reads a board file, and provides you with both the longest and deepest words found (and continues that for two more steps, which are rather useless). It has a few filtering options which may be interesting if you want to analyze a game manually.
+
+    ./find.py dict/twl games/game [coordinates] [target]
+    
+It does not yet assume that dictionaries be in the dict/ folder or games in the games/ folder, so you'll have to provide the full path. 
+
+- coordinates are two parameters which filter where to begin the word. If provided, only words starting at that coordinate will be shown.
+- target are two parameters which filter which field should be hit by the word. If provided, only words that hit a given field will be shown. If you want to provide a target but no start coordinates, set the start coordinates to "0 0".
+
+Examples:
+
+    # best words from base
+    ./find.py dict/twl games/example1
+    10 13
+    longest (9, [u'BEAMISHLY', u'BEAMISHLY', u'IMPOSTORS', u'IMPOSTERS', u'DENTALIUM', u'DECRETALS'])
+    deepest (5, [u'BEGIRD', u'BEGIRD', u'BEGIRT', u'BEGGED', u'BEHEADED', u'BEADED', u'LEGGED', u'LEADED', u'SHADED', u'IMAGED', u'IMPEDED', u'DENTALIUM'])
+
+    # best words from field 4 5
+    ./find.py dict/twl games/example1 4 5
+    10 13
+    longest (9, [u'LIFESPANS', u'LIFESPANS', u'LIFESPANS'])
+    deepest (9, [u'LINGUAL', u'LINGUAL', u'LINGUAE', u'LINGUAL'])
+
+    # best words from field 4 5 hitting 6 5 (not possible)
+    ./find.py dict/twl games/example1 4 5 6 5
+    10 13
+    longest (0, [''])
+    deepest (0, [''])
+    
+    # best words from base hitting 2 2 
+    ./find.py dict/twl games/example1 0 0 2 2
+    10 13
+    longest (9, [u'BEAMISHLY', u'BEAMISHLY'])
+    deepest (5, [u'BEHEADED', u'BEHEADED', u'BEADED', u'LEADED', u'SHADED', u'IMAGED'])
 
 
 
