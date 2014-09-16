@@ -156,14 +156,14 @@ Should you find that a word is not in the dictionary, or a word is suggested by 
 addword.py
 ----------
 
-    ./addword dict/twl newword
+    ./addword.py dict/twl newword
     
 Adds a word to the word list.
 
 rmword.py
 ----------
 
-    ./rmword dict/twl notrecognized
+    ./rmword.py dict/twl notrecognized
     
 Removes a word from the word list.
 
