@@ -36,6 +36,7 @@ lang = "dict/twl"
 nope, infile = sys.argv[0:2]
 played       = [p.upper() for p in sys.argv[2:]]
 played_      = [p.split("#")[:1][0] for p in played] 
+played_d     = dict((x,True) for x in played_)
 
 conn = db.connect("%s.sqlite" % lang)
 c    = conn.cursor()
@@ -118,7 +119,7 @@ def startsat (y, x, root, chain, np_cb):
 
   if exists(root):
     putword(root, chain)
-    if root in played_:
+    if root in played_d:
       return found
     if np_cb:
       sy, sx = chain[0]
@@ -289,6 +290,10 @@ def minmax(depth, owned, reverse=False, moves=[]):
     us, them = THEM, US
 
   best = (-LOTS,None,None,None)
+  rest = [] 
+
+  moves_d = dict((x,True) for x in moves)
+
   loopgen = xrange(sizey) if reverse else xrange(sizey-1,-1,-1)
   # iterate over the stronger (closer) moves first
   #for y in xrange(sizey-1,-1,-1):
@@ -298,7 +303,7 @@ def minmax(depth, owned, reverse=False, moves=[]):
       if owned[y][x] == us:
         for word,chain in words[y][x]:
           if len(word)<CUTOFF: continue   # FIXME confirm speedup?
-          if word in moves: continue # keep track of previous moves 
+          if word in moves_d: continue # keep track of previous moves 
           rel_value = 0
           final = False
           for ly,lx in chain[1:]:
@@ -326,6 +331,7 @@ def minmax(depth, owned, reverse=False, moves=[]):
 
             rel_value -= opposite_move[0]
           if rel_value > best[0]:
+            rest = [best] + rest[:4]
             best = (rel_value, word, chain, opposite_move)
   
   return best
