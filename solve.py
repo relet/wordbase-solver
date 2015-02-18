@@ -164,6 +164,7 @@ if not restored:
   for y in xrange(sizey):
     for x in xrange(sizex):
       words[y][x] = startsat(y,x,letters[y][x],[],register_np)
+      words[y][x] = sorted(words[y][x], key=lambda x:len(x[0]), reverse=True)
       score[y][x] = len(words[y][x])
 
   #add up to [NP_HIT_SCORE * distance to base] points for every NP hit
