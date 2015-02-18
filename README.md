@@ -1,7 +1,7 @@
 wordbase-solver
 ===============
 
-A three step minmax solver for wordbase-like games.
+A fast three step minmax solver for wordbase-like games.
 
 
 Installation 
