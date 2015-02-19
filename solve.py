@@ -375,6 +375,8 @@ if played:
   for play in played:
     if "#" in play:
       word,variant = play.split("#") 
+      if not variant:
+        continue
       playout(word, playing, int(variant))
     else:
       playout(play, playing)
