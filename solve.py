@@ -346,7 +346,13 @@ def playout(play, playing, selected=-1, variant=-1):
   if variant==-1:
     chains = [c for c in getword(play) if (owned[c[0][0]][c[0][1]] == playing)]
     if not chains:
-      print "NOT FOUND: '%s'" % play
+      if exists(play):
+        print "Cannot play '%s' at this stage of the game." % play
+        switched = [c for c in getword(play) if (owned[c[0][0]][c[0][1]] == BOTH-playing)]
+        if switched:
+          print "Hint: The word is playable for the other player. Maybe you skipped a move."
+      else:
+        print "'%s' is not in my dictionary, use addword.py to remedy this." % play
       sys.exit(1) 
     matched = False
     if len(chains)>1:
