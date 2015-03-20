@@ -89,7 +89,7 @@ Sometimes, you make mistakes. The script will try to tell you what went worng:
     # ./solve.py example1 hello
     Cannot play 'HELLO' at this stage of the game.
 
-The most common causes for this error is when you chose the wrong move from a choice of words (e.g. ESCAPERS#0 instead of ESCAPERS#1) and the move will not be possible with the chosen option.
+The most common causes for this error is when you play a large number of words, and at some earlier point chose the wrong move from a choice of words (e.g. ESCAPERS#0 instead of ESCAPERS#1), so that the current move will not be possible - for example because the player now occupies the necessary initial letter at a completely different place on the board.
 
     # ./solve.py example1 - sponsal
     Cannot play 'SPONSAL' at this stage of the game.
