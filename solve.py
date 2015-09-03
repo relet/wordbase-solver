@@ -26,6 +26,7 @@ BLACK  = '\033[0;37;40m'
 GRAY   = '\033[0;36;40m'
 MORELIGHT  = '\033[1;36;41m'
 DANGER = '\033[1;31;43m'
+NORMAL = '\033[0m'
 
 NP_HIT_SCORE = 2
 NP_SCORE     = 10
@@ -282,8 +283,8 @@ def printboard(owned, highlight, np):
         print GRAY+letters[y][x],
       else:
         print BLACK+letters[y][x],
-    print BLACK 
-  print BLACK
+    print NORMAL 
+  print NORMAL 
 
 def minmax(depth, owned, reverse=False, moves=[]):
   us, them = US, THEM
