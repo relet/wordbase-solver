@@ -75,13 +75,27 @@ def beginable(root):
   c.execute('select * from lastbits where bit = "%s" limit 1' % root)
   return c.fetchone() and True or False
 
+ccache = {}
+def ccont(root):
+    if not root in ccache:
+        ccache[root]=continuable(root)
+    return ccache[root]
+
 def continuable(root):
-  c.execute('select * from bits where bit = "%s" limit 1' % root)
-  return c.fetchone() and True or False
+  if root[-1]=="_":
+    c.execute('select * from bits where bit > "%s" and bit <= "%s" and length(bit)=%i' % (root[:-1],root[:-1]+'Z',len(root)))
+  else:
+    c.execute('select * from bits where bit = "%s" limit 1' % root)
+  result = c.fetchall()
+  return result and [x[1] for x in result]
 
 def exists(root):
   c.execute('select * from words where word = "%s" limit 1' % root)
   return c.fetchone() and True or False
+
+def resolve(root):
+  c.execute('select * from words where word like "%s" limit 1' % root)
+  return c.fetchone()[1]
 
 def towards (y, x, root, chain):
   if (y,x) in chain: return []
@@ -115,8 +129,10 @@ def startsat (y, x, root, chain, np_cb):
       ny = y+dy
       if (ny<0) or (nx<0) or (ny>=sizey) or (nx>=sizex):
         continue
-      elif continuable(root):
-        found = found + startsat(ny, nx, root+letters[ny][nx], chain, np_cb)
+      else: 
+        ends = ccont(root)
+        for end in ends:
+            found = found + startsat(ny, nx, end + letters[ny][nx], chain, np_cb)
 
   if exists(root):
     putword(root, chain)
@@ -394,10 +410,10 @@ for depth in sorted(attacks.keys())[:1]:
   print depth, attacks[depth]
 for depth in sorted(attacks.keys())[1:3]:
   a = attacks[depth]
-  if len(a)>10:
-    print depth, "%i attacks" % len(a)
-  else:
-    print depth, a
+  #if len(a)>10:
+  #  print depth, "%i attacks" % len(a)
+  #else:
+  print depth, a
 print "THREATS ==="
 for depth in sorted(threats.keys())[-3:]:
   t = threats[depth]
@@ -426,9 +442,9 @@ while True:
   rating, ours, ourchain, th = future[0], future[1], future[2], future[3]
   if not th or not th[2]:
     printboard (owned, ourchain, np)
-    print "%s - no surviving move." % ours 
+    print "%s - no surviving move." % resolve(ours) 
     final = minmax(0, owned)
-    print final[1]
+    print resolve(final[1])
     break
   else:
     theirs, theirchain = th[1], th[2]
@@ -437,7 +453,7 @@ while True:
     playout (ours, US, variant = wordindex[ours].index(ourchain)) 
     moves += [ours]
     warning = len(wordindex[ours]) > 1 and future[2] or ""
-    print rating, ours, theirs, warning
+    print rating, resolve(ours), theirs, warning
     playout (theirs, THEM, variant=wordindex[theirs].index(theirchain))
     moves += [theirs]
     round += 2
