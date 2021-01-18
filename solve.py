@@ -5,7 +5,7 @@
 import sys
 import sqlite3 as db
 import codecs
-import cPickle as cP
+import _pickle as cP
 
 #from copy import deepcopy
 def deepcopy(twod): # faster
@@ -49,17 +49,17 @@ sizey   = len(letters)
 
 
 
-words     = [[{} for x in xrange(sizex)] for y in xrange(sizey)]
-score     = [[0 for x in xrange(sizex)] for y in xrange(sizey)]
-owned     = [[NOBODY for x in xrange(sizex)] for y in xrange(sizey)]
-np        = [[NOBODY for x in xrange(sizex)] for y in xrange(sizey)]
+words     = [[{} for x in range(sizex)] for y in range(sizey)]
+score     = [[0 for x in range(sizex)] for y in range(sizey)]
+owned     = [[NOBODY for x in range(sizex)] for y in range(sizey)]
+np        = [[NOBODY for x in range(sizex)] for y in range(sizey)]
 bombs     = [[letter.isupper() for letter in line] for line in lines]
 
 wordindex = {}
 attacks   = {}
 threats   = {}
 
-for x in xrange(sizex):
+for x in range(sizex):
   owned[0][x] = US
   owned[sizey-1][x] = THEM
 
@@ -82,7 +82,7 @@ def ccont(root):
     return ccache[root]
 
 def continuable(root):
-  if root[-1]=="_":
+  if root[-1]=="_" and len(root)>=2:
     c.execute('select * from bits where bit > "%s" and bit <= "%s" and length(bit)=%i' % (root[:-1],root[:-1]+'Z',len(root)))
   else:
     c.execute('select * from bits where bit = "%s" limit 1' % root)
@@ -90,6 +90,8 @@ def continuable(root):
   return result and [x[1] for x in result]
 
 def exists(root):
+  if len(root)>12: 
+      return False
   c.execute('select * from words where word = "%s" limit 1' % root)
   return c.fetchone() and True or False
 
@@ -164,29 +166,29 @@ def register_np(root, chain, direction, y, x):
 
 restored = False
 try:
-  dump = open("games/%s.idx" % infile, "r").read()
+  dump = open("games/%s.idx" % infile, "rb").read()
   letters_, words_, score_, wordindex_, attacks_, threats_, np_ = cP.loads(dump)
   if letters_==letters:
     words, score, wordindex, attacks, threats, np = words_, score_, wordindex_, attacks_, threats_, np_
     restored = True
-    print "Word list restored from dump. yay."
+    print("Word list restored from dump. yay.")
   else:
-    print "Letters have changed, not using dump."
+    print("Letters have changed, not using dump.")
 except:
-  print "Generating word index and attack vectors."
-  #print sys.exc_info() 
+  print("Generating word index and attack vectors.")
+  print(sys.exc_info())
   pass
 
 if not restored:
-  for y in xrange(sizey):
-    for x in xrange(sizex):
+  for y in range(sizey):
+    for x in range(sizex):
       words[y][x] = startsat(y,x,letters[y][x],[],register_np)
       words[y][x] = sorted(words[y][x], key=lambda x:len(x[0]), reverse=True)
       score[y][x] = len(words[y][x])
 
   #add up to [NP_HIT_SCORE * distance to base] points for every NP hit
-  for y in xrange(sizey):
-    for x in xrange(sizex):
+  for y in range(sizey):
+    for x in range(sizex):
       for word,chain in words[y][x]:
         for ly,lx in chain:
           if np[ly][lx]:
@@ -206,13 +208,13 @@ if not restored:
           distance = sizey-y
         score[y][x] += NP_SCORE * distance
   
-  for x in xrange(sizex):
+  for x in range(sizex):
     score[0][x] = LOTS
     score[sizey-1][x] = LOTS
 
   # create a dump of the data structures - speedup for next run on the same table
   #
-  dump = open("games/%s.idx" % infile, "w") 
+  dump = open("games/%s.idx" % infile, "wb") 
   dump.write(cP.dumps((letters, words, score, wordindex, attacks, threats, np)))
   dump.close()
 
@@ -264,16 +266,16 @@ def consistency(owned):
   spread([(sizey-1,0)], consistent, THEM)
 
   cuts = []
-  for y in xrange(sizey):
-    for x in xrange(sizex):
+  for y in range(sizey):
+    for x in range(sizex):
       if consistent[y][x] and not consistent[y][x]==OK:
         cuts.append((y,x))
   return cuts
 
 def board_value(owned):
   vsum = 0
-  for y in xrange(sizey):
-    for x in xrange(sizex):
+  for y in range(sizey):
+    for x in range(sizex):
       if owned[y][x] == US:
         vsum += score[y][x]
       if owned[y][x] == THEM:
@@ -281,26 +283,26 @@ def board_value(owned):
   return vsum
 
 def printboard(owned, highlight, np):
-  for y in xrange(sizey):
-    for x in xrange(sizex):
+  for y in range(sizey):
+    for x in range(sizex):
       if highlight and ((y,x) in highlight):
         if np[y][x] & THEM:
-          print MORELIGHT+letters[y][x],
+          print(MORELIGHT+letters[y][x],end=' ')
         else:
-          print HIGHLIGHT+letters[y][x],
+          print(HIGHLIGHT+letters[y][x],end=' ')
       elif owned[y][x] == THEM:
         if np[y][x] & US:
-          print DANGER+letters[y][x],
+          print(DANGER+letters[y][x],end=' ')
         else:
-          print RED+letters[y][x],
+          print(RED+letters[y][x],end=' ')
       elif owned[y][x] == US:
-        print BLUE+letters[y][x],
+        print(BLUE+letters[y][x],end=' ')
       elif np[y][x]:
-        print GRAY+letters[y][x],
+        print(GRAY+letters[y][x],end=' ')
       else:
-        print BLACK+letters[y][x],
-    print NORMAL 
-  print NORMAL 
+        print(BLACK+letters[y][x],end=' ')
+    print(NORMAL) 
+  print(NORMAL)
 
 def minmax(depth, owned, reverse=False, moves=[]):
   us, them = US, THEM
@@ -312,16 +314,16 @@ def minmax(depth, owned, reverse=False, moves=[]):
 
   moves_d = dict((x,True) for x in moves)
 
-  loopgen = xrange(sizey) if reverse else xrange(sizey-1,-1,-1)
+  loopgen = range(sizey) if reverse else range(sizey-1,-1,-1)
   # iterate over the stronger (closer) moves first
-  #for y in xrange(sizey-1,-1,-1):
-  #for y in xrange(sizey):
+  #for y in range(sizey-1,-1,-1):
+  #for y in range(sizey):
   for y in loopgen:
-    for x in xrange(sizex):
+    for x in range(sizex):
       if owned[y][x] == us:
         for word,chain in words[y][x]:
-          if len(word)<CUTOFF: continue   # FIXME confirm speedup?
-          if word in moves_d: continue # keep track of previous moves 
+          if len(word)<CUTOFF: continue  # FIXME confirm speedup?
+          if word in moves_d: continue   # keep track of previous moves 
           rel_value = 0
           final = False
           for ly,lx in chain[1:]:
@@ -364,19 +366,19 @@ def playout(play, playing, selected=-1, variant=-1):
     chains = [c for c in getword(play) if (owned[c[0][0]][c[0][1]] == playing)]
     if not chains:
       if exists(play):
-        print "Cannot play '%s' at this stage of the game." % play
+        print("Cannot play '{}' at this stage of the game.".format(play))
         switched = [c for c in getword(play) if (owned[c[0][0]][c[0][1]] == BOTH-playing)]
         if switched:
-          print "Hint: The word is playable for the other player. Maybe you skipped a move."
+          print("Hint: The word is playable for the other player. Maybe you skipped a move.")
       else:
-        print "'%s' is not in my dictionary, use addword.py to remedy this." % play
+        print("'{}' is not in my dictionary, use addword.py to remedy this.".format(play))
       sys.exit(1) 
     matched = False
     if len(chains)>1:
       if selected==-1:
-        print "%i variants to play %s. Append # + number to select." % (len(chains), play)
+        print("{} variants to play {}. Append # + number to select.".format(len(chains), play))
         for i,chain in enumerate(chains):
-          print i, chain
+          print(i, chain)
         sys.exit(1)
     chain = chains[selected]
   else:
@@ -391,7 +393,9 @@ def playout(play, playing, selected=-1, variant=-1):
       for cy,cx in cuts:
         owned[cy][cx] = NOBODY 
   if not matched:
-    print "NOT MATCHED: '%s'" % play
+    print("NOT MATCHED: '{}'".format(play))
+
+print("COMPLEXITY: {} words".format(len(wordindex)))
 
 playing = US
 if played:
@@ -405,46 +409,44 @@ if played:
       playout(play, playing)
     playing = BOTH - playing
 
-print "ATTACKS ==="
+print("ATTACKS ===")
 for depth in sorted(attacks.keys())[:1]:
-  print depth, attacks[depth]
+  print(depth, attacks[depth])
 for depth in sorted(attacks.keys())[1:3]:
   a = attacks[depth]
   #if len(a)>10:
   #  print depth, "%i attacks" % len(a)
   #else:
-  print depth, a
-print "THREATS ==="
+  print(depth, a)
+print("THREATS ===")
 for depth in sorted(threats.keys())[-3:]:
   t = threats[depth]
   if len(t)>10:
-    print depth, "%i attacks" % len(t)
+    print (depth, "{} attacks".format(len(t)))
   else:
-    print depth, t
+    print (depth, t)
 
-print "PLAYS ==="
+print("PLAYS ===")
 
 round = 0
 if playing==THEM:
   future = minmax(2, owned, reverse=True, moves=played_)
   if not future[3]:
-    #print "If they play %s, you lose." % (future[1],)
-    print future
+    print(future)
   else:
     rating, theirs, ours, ourrating = future[0], future[1], future[3][1], future[3][0]
-    print "!!!", theirs, ours, "->", ourrating
+    print ("!!!", theirs, ours, "->", ourrating)
   sys.exit(1) #quick hack to see best opp move at a glance
 
 moves = played_
 while True:
   future = minmax(2, owned, moves=moves)
-  #print future
   rating, ours, ourchain, th = future[0], future[1], future[2], future[3]
   if not th or not th[2]:
     printboard (owned, ourchain, np)
-    print "%s - no surviving move." % resolve(ours) 
+    print("{} - no surviving move.".format(resolve(ours)))
     final = minmax(0, owned)
-    print resolve(final[1])
+    print(resolve(final[1]))
     break
   else:
     theirs, theirchain = th[1], th[2]
@@ -453,7 +455,7 @@ while True:
     playout (ours, US, variant = wordindex[ours].index(ourchain)) 
     moves += [ours]
     warning = len(wordindex[ours]) > 1 and future[2] or ""
-    print rating, resolve(ours), theirs, warning
+    print(rating, resolve(ours), theirs, warning)
     playout (theirs, THEM, variant=wordindex[theirs].index(theirchain))
     moves += [theirs]
     round += 2
