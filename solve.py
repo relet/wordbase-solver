@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # todo: detect when *we* have no surviving moves.
 
@@ -189,7 +189,7 @@ if not restored:
   #add up to [NP_HIT_SCORE * distance to base] points for every NP hit
   for y in range(sizey):
     for x in range(sizex):
-      for word,chain in words[y][x]:
+      for word,chain in words[y][x][:50]:
         for ly,lx in chain:
           if np[ly][lx]:
             distance = sizey # BOTH sides' np is reached
@@ -447,6 +447,7 @@ while True:
     print("{} - no surviving move.".format(resolve(ours)))
     final = minmax(0, owned)
     print(resolve(final[1]))
+    sys.exit(1)
     break
   else:
     theirs, theirchain = th[1], th[2]
