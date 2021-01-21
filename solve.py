@@ -23,9 +23,10 @@ OK     = 10
 HIGHLIGHT  = '\033[1;33;41m'
 RED    = '\033[1;30;43m'
 BLUE   = '\033[1;37;44m'
+MORELIGHT  = '\033[1;33;42m'
 BLACK  = '\033[0;37;40m'
 GRAY   = '\033[0;36;40m'
-MORELIGHT  = '\033[1;36;41m'
+#MORELIGHT  = '\033[1;36;41m'
 DANGER = '\033[1;31;43m'
 NORMAL = '\033[0m'
 
@@ -282,6 +283,15 @@ def board_value(owned):
         vsum -= score[y][x]
   return vsum
 
+LEGEND={
+        0: " | "+RED        +"THEM       ",
+        1: " | "+BLUE       +"US         ",
+        2: " | "+HIGHLIGHT  +"OUR MOVE   ",
+        3: " | "+MORELIGHT  +"ATTACK     ",
+        4: " | "+RED        +"THEIR MOVE ",
+        5: " | "+DANGER     +"THREAT     ",
+        }
+
 def printboard(owned, highlight, np):
   for y in range(sizey):
     for x in range(sizex):
@@ -301,7 +311,10 @@ def printboard(owned, highlight, np):
         print(GRAY+letters[y][x],end=' ')
       else:
         print(BLACK+letters[y][x],end=' ')
+    print(NORMAL,end='') 
+    print(LEGEND.get(y,' | '),end='')
     print(NORMAL) 
+
   print(NORMAL)
 
 def minmax(depth, owned, reverse=False, moves=[]):
