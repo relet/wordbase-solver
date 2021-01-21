@@ -11,7 +11,8 @@ import _pickle as cP
 def deepcopy(twod): # faster
   return [x[:] for x in twod]
 
-CUTOFF = 2 # ignore words shorter than this
+CUTOFF = 2     # ignore words shorter than this
+SPEEDCAP = 50  # consider the X longest words per position
 
 NOBODY = 0
 US     = 1
@@ -30,7 +31,7 @@ NORMAL = '\033[0m'
 
 NP_HIT_SCORE = 2
 NP_SCORE     = 10
-LOTS         = 100000
+LOTS         = 1000000
 
 lang = "dict/twl"
 
@@ -82,7 +83,7 @@ def ccont(root):
     return ccache[root]
 
 def continuable(root):
-  if root[-1]=="_" and len(root)>=2:
+  if root[-1]=="_" and len(root)>=4:
     c.execute('select * from bits where bit > "%s" and bit <= "%s" and length(bit)=%i' % (root[:-1],root[:-1]+'Z',len(root)))
   else:
     c.execute('select * from bits where bit = "%s" limit 1' % root)
@@ -176,7 +177,6 @@ try:
     print("Letters have changed, not using dump.")
 except:
   print("Generating word index and attack vectors.")
-  print(sys.exc_info())
   pass
 
 if not restored:
@@ -189,7 +189,7 @@ if not restored:
   #add up to [NP_HIT_SCORE * distance to base] points for every NP hit
   for y in range(sizey):
     for x in range(sizex):
-      for word,chain in words[y][x][:50]:
+      for word,chain in words[y][x]:
         for ly,lx in chain:
           if np[ly][lx]:
             distance = sizey # BOTH sides' np is reached
@@ -321,7 +321,7 @@ def minmax(depth, owned, reverse=False, moves=[]):
   for y in loopgen:
     for x in range(sizex):
       if owned[y][x] == us:
-        for word,chain in words[y][x]:
+        for word,chain in words[y][x][:SPEEDCAP]:
           if len(word)<CUTOFF: continue  # FIXME confirm speedup?
           if word in moves_d: continue   # keep track of previous moves 
           rel_value = 0
@@ -330,6 +330,8 @@ def minmax(depth, owned, reverse=False, moves=[]):
             if ((them == THEM) and ly == sizey-1) or ((them == US) and ly == 0):
               final = True
               rel_value = LOTS#sys.maxint
+              #if depth==2:
+              #  print ("CHECK final move is {} {}, best is {} {}".format(LOTS, word, best[0], best[1]))
               break
             if owned[ly][lx] == NOBODY:
               rel_value += score[ly][lx]
@@ -380,7 +382,14 @@ def playout(play, playing, selected=-1, variant=-1):
         for i,chain in enumerate(chains):
           print(i, chain)
         sys.exit(1)
-    chain = chains[selected]
+    try:
+      chain = chains[selected]
+    except: 
+      print("CHAIN INDEX INVALID")
+      print("{} variants to play {}. Append # + number to select.".format(len(chains), play))
+      for i,chain in enumerate(chains):
+        print(i, chain)
+      sys.exit(1)
   else:
     chain = getword(play)[variant]
   sy,sx = chain[0]
