@@ -167,7 +167,7 @@ def register_np(root, chain, direction, y, x):
 restored = False
 try:
   dump = open("games/%s.idx" % infile, "rb").read()
-  letters_, words_, score_, wordindex_, attacks_, threats_, np_ = cP.loads(dump)
+  letters_, words_, score_, wordindex_, attacks_, threats_, np_, dictlen_ = cP.loads(dump)
   if letters_==letters:
     words, score, wordindex, attacks, threats, np = words_, score_, wordindex_, attacks_, threats_, np_
     restored = True
@@ -215,7 +215,7 @@ if not restored:
   # create a dump of the data structures - speedup for next run on the same table
   #
   dump = open("games/%s.idx" % infile, "wb") 
-  dump.write(cP.dumps((letters, words, score, wordindex, attacks, threats, np)))
+  dump.write(cP.dumps((letters, words, score, wordindex, attacks, threats, np, dictlen)))
   dump.close()
 
 # minmax
