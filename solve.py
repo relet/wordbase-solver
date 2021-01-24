@@ -175,12 +175,12 @@ try:
   dump = open("games/%s.idx" % infile, "rb").read()
   letters_, words_, score_, wordindex_, attacks_, threats_, np_, dictlen_ = cP.loads(dump)
   if letters_==letters:
-    words, score, wordindex, attacks, threats, np = words_, score_, wordindex_, attacks_, threats_, np_
-    restored = True
     print("Word list restored from dump. yay.")
     if dictlen != dictlen_:
         print("Dictionary has changed, not using dump.")
         raise Exception()
+    words, score, wordindex, attacks, threats, np = words_, score_, wordindex_, attacks_, threats_, np_
+    restored = True
   else:
     print("Letters have changed, not using dump.")
 except Exception as e:
