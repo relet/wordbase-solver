@@ -176,7 +176,6 @@ try:
     print("Letters have changed, not using dump.")
 except:
   print("Generating word index and attack vectors.")
-  print(sys.exc_info())
   pass
 
 if not restored:
@@ -322,7 +321,7 @@ def minmax(depth, owned, reverse=False, moves=[]):
     for y in loopgen:
       for x in range(sizex):
         if owned[y][x] == us:
-          for word,chain in words[y][x]:
+          for word,chain in words[y][x][:40]:
             yield (word,chain)
 
   for word, chain in order():
