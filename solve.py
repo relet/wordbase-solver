@@ -2,10 +2,11 @@
 #
 # todo: detect when *we* have no surviving moves.
 
-import sys
-import sqlite3 as db
-import codecs
 import _pickle as cP
+import codecs
+import copy
+import sqlite3 as db
+import sys
 
 #from copy import deepcopy
 def deepcopy(twod): # faster
@@ -317,7 +318,18 @@ def printboard(owned, highlight, np):
 
   print(NORMAL)
 
-def minmax(depth, owned, reverse=False, moves=[]):
+def joker_check(jokers, chain, word):
+  failed = False
+  #print("JOKER CHECK",word)
+  for i,(y,x) in enumerate(chain):
+    joke = jokers.get((y,x)) 
+    letter = word[i]
+    if joke and joke != "_" and joke != letter:
+      #print("FAILED", joke, "!=", letter, "in", word, "at", (y,x), "index", i, chain)
+      return False
+  return True
+
+def minmax(depth, owned, jokers, reverse=False, moves=[]):
   us, them = US, THEM
   if reverse:
     us, them = THEM, US
@@ -362,16 +374,17 @@ def minmax(depth, owned, reverse=False, moves=[]):
                 new_owned[cy][cx] = NOBODY 
                 if new_owned[cy][cx] == them:
                   rel_value += score[cy][cx] 
-            opposite_move = minmax(depth-1, new_owned, not reverse, moves + [word])
+            opposite_move = minmax(depth-1, new_owned, copy.deepcopy(jokers), not reverse, moves + [word])
 
             rel_value -= opposite_move[0]
           if rel_value > best[0]:
-            rest = [best] + rest[:4]
+            #if depth==2 and not joker_check(jokers, chain, word): continue
+            rest = [best] + rest
             best = (rel_value, word, chain, opposite_move)
   
   return best
 
-def playout(play, playing, selected=-1, variant=-1):
+def playout(play, playing, jokers, selected=-1, variant=-1):
   global owned
 
   if play == "-": return
@@ -408,16 +421,28 @@ def playout(play, playing, selected=-1, variant=-1):
   sy,sx = chain[0]
   if owned[sy][sx] == playing:
     matched = True
-    for ly,lx in chain:
+    for i,(ly,lx) in enumerate(chain):
       owned[ly][lx] = playing
-      bomb(ly,lx,owned,bombs,playing) 
+
+      # update jokers
+      letter = play[i]
+      joker  = jokers.get((ly,lx))
+      if joker=="_":
+          jokers[(ly,lx)]=letter
+      elif joker is not None and joker != letter:
+          print("REUSED JOKER WITH A DIFFERENT LETTER", (ly,lx), joker, "!=", letter, play)
+          #sys.exit(1)
+
+      #bomb(ly,lx,owned,bombs,playing) 
       cuts = consistency(owned)
       for cy,cx in cuts:
         owned[cy][cx] = NOBODY 
   if not matched:
     print("NOT MATCHED: '{}'".format(play))
+    sys.exit(1)
 
 print("COMPLEXITY: {} words".format(len(wordindex)))
+jokers = {(y,x):"_" for y in range(sizey) for x in range(sizex) if letters[y][x]=="_"}
 
 playing = US
 if played:
@@ -426,9 +451,9 @@ if played:
       word,variant = play.split("#") 
       if not variant:
         continue
-      playout(word, playing, int(variant))
+      playout(word, playing, jokers, int(variant))
     else:
-      playout(play, playing)
+      playout(play, playing, jokers)
     playing = BOTH - playing
 
 print("ATTACKS ===")
@@ -452,7 +477,7 @@ print("PLAYS ===")
 
 round = 0
 if playing==THEM:
-  future = minmax(2, owned, reverse=True, moves=played_)
+  future = minmax(2, owned, jokers, reverse=True, moves=played_)
   if not future[3]:
     print(future)
   else:
@@ -462,12 +487,12 @@ if playing==THEM:
 
 moves = played_
 while True:
-  future = minmax(2, owned, moves=moves)
+  future = minmax(2, owned, jokers, moves=moves)
   rating, ours, ourchain, th = future[0], future[1], future[2], future[3]
   if not th or not th[2]:
     printboard (owned, ourchain, np)
     print("{} - no surviving move.".format(resolve(ours)))
-    final = minmax(0, owned)
+    final = minmax(0, owned, jokers)
     print(resolve(final[1]))
     sys.exit(1)
     break
@@ -475,11 +500,11 @@ while True:
     theirs, theirchain = th[1], th[2]
     if round==0:
       printboard(owned, ourchain, np)
-    playout (ours, US, variant = wordindex[ours].index(ourchain)) 
+    playout (ours, US, jokers, variant = wordindex[ours].index(ourchain)) 
     moves += [ours]
     warning = len(wordindex[ours]) > 1 and future[2] or ""
     print(rating, resolve(ours), theirs, warning)
-    playout (theirs, THEM, variant=wordindex[theirs].index(theirchain))
+    playout (theirs, THEM, jokers, variant=wordindex[theirs].index(theirchain))
     moves += [theirs]
     round += 2
 

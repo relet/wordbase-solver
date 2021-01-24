@@ -435,10 +435,10 @@ def deepest(x):
     #return x[1][-1][1]
 
 w = sorted(words[searchy][searchx],key=deepest)
-for x in w[0:20]:
+for x in w[0:30]:
     print(x)
 
 print("REVERSE {} {} ===".format(searchx,searchy))
 w = sorted(words[searchy][searchx],key=deepest,reverse=True)
-for x in w[0:20]:
+for x in w[0:40]:
     print(x)
