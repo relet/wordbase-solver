@@ -45,6 +45,9 @@ played_d     = dict((x,True) for x in played_)
 conn = db.connect("%s.sqlite" % lang)
 c    = conn.cursor()
 
+c.execute("select count(word) from words")
+dictlen = int(c.fetchone()[0])
+
 lines   = [line.strip() for line in codecs.open("games/"+infile,'r','utf-8').read().strip().split("\n")]
 letters = [line.upper() for line in lines]
 sizex   = len(letters[0])
@@ -170,14 +173,18 @@ def register_np(root, chain, direction, y, x):
 restored = False
 try:
   dump = open("games/%s.idx" % infile, "rb").read()
-  letters_, words_, score_, wordindex_, attacks_, threats_, np_ = cP.loads(dump)
+  letters_, words_, score_, wordindex_, attacks_, threats_, np_, dictlen_ = cP.loads(dump)
   if letters_==letters:
     words, score, wordindex, attacks, threats, np = words_, score_, wordindex_, attacks_, threats_, np_
     restored = True
     print("Word list restored from dump. yay.")
+    if dictlen != dictlen_:
+        print("Dictionary has changed, not using dump.")
+        raise Exception()
   else:
     print("Letters have changed, not using dump.")
-except:
+except Exception as e:
+  print(e)
   print("Generating word index and attack vectors.")
   pass
 
@@ -217,7 +224,7 @@ if not restored:
   # create a dump of the data structures - speedup for next run on the same table
   #
   dump = open("games/%s.idx" % infile, "wb") 
-  dump.write(cP.dumps((letters, words, score, wordindex, attacks, threats, np)))
+  dump.write(cP.dumps((letters, words, score, wordindex, attacks, threats, np, dictlen)))
   dump.close()
 
 # minmax
