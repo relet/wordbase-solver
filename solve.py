@@ -12,8 +12,9 @@ import sys
 def deepcopy(twod): # faster
   return [x[:] for x in twod]
 
-CUTOFF = 2     # ignore words shorter than this
+CUTOFF = 2       # ignore words shorter than this
 SPEEDCAP = 50  # consider the X longest words per position
+JOKER_OFFSET = 1 # use jokers with word minimum length #
 
 NOBODY = 0
 US     = 1
@@ -88,7 +89,7 @@ def ccont(root):
     return ccache[root]
 
 def continuable(root):
-  if root[-1]=="_" and len(root)>=4:
+  if root[-1]=="_" and len(root)>=JOKER_OFFSET:
     c.execute('select * from bits where bit > "%s" and bit <= "%s" and length(bit)=%i' % (root[:-1],root[:-1]+'Z',len(root)))
   else:
     c.execute('select * from bits where bit = "%s" limit 1' % root)
@@ -384,11 +385,12 @@ def minmax(depth, owned, jokers, reverse=False, moves=[]):
             opposite_move = minmax(depth-1, new_owned, copy.deepcopy(jokers), not reverse, moves + [word])
 
             rel_value -= opposite_move[0]
-          if rel_value > best[0]:
+          if rel_value >= best[0]: # later words are better, because they are shorter
             #if depth==2 and not joker_check(jokers, chain, word): continue
             rest = [best] + rest
             best = (rel_value, word, chain, opposite_move)
   
+
   return best
 
 def playout(play, playing, jokers, selected=-1, variant=-1):
@@ -468,15 +470,15 @@ for depth in sorted(attacks.keys())[:1]:
   print(depth, attacks[depth])
 for depth in sorted(attacks.keys())[1:3]:
   a = attacks[depth]
-  #if len(a)>10:
-  #  print depth, "%i attacks" % len(a)
-  #else:
-  print(depth, a)
+  if len(a)>10:
+    print (depth, "{} attacks from letters {}".format(len(a), "-".join(set([w[1] for w in a]))))
+  else:
+    print(depth, a)
 print("THREATS ===")
 for depth in sorted(threats.keys())[-3:]:
   t = threats[depth]
   if len(t)>10:
-    print (depth, "{} attacks".format(len(t)))
+    print (depth, "{} attacks from letters {}".format(len(a), "-".join(set([w[1] for w in t]))))
   else:
     print (depth, t)
 
