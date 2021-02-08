@@ -13,8 +13,8 @@ def deepcopy(twod): # faster
   return [x[:] for x in twod]
 
 CUTOFF = 2       # ignore words shorter than this
-SPEEDCAP = 50  # consider the X longest words per position
-JOKER_OFFSET = 1 # use jokers with word minimum length #
+SPEEDCAP = 5000  # consider the X longest words per position
+JOKER_OFFSET = 4 # use jokers with word minimum length #
 
 NOBODY = 0
 US     = 1
@@ -415,8 +415,15 @@ def playout(play, playing, jokers, selected=-1, variant=-1):
       if selected==-1:
         print("{} variants to play {}. Append # + number to select.".format(len(chains), play))
         for i,chain in enumerate(chains):
-          print(i, chain)
+          print("{}: ".format(i), end='')
+          for j,position in enumerate(chain):
+            if i>0 and chains[i-1][j] == position:
+              print("  --  , ", end='')
+            else:
+              print("{}, ".format(position), end='')
+          print()
         sys.exit(1)
+
     try:
       chain = chains[selected]
     except: 
