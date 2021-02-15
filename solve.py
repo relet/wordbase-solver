@@ -486,14 +486,14 @@ for depth in sorted(attacks.keys())[:1]:
 for depth in sorted(attacks.keys())[1:3]:
   a = attacks[depth]
   if len(a)>10:
-    print (depth, "{} attacks from letters {}".format(len(a), "-".join(set([w[1] for w in a]))))
+    print (depth, "{} attacks from letters {}".format(len(a), "-".join(set([w[0] for w in a]))))
   else:
     print(depth, a)
 print("THREATS ===")
 for depth in sorted(threats.keys())[-3:]:
   t = threats[depth]
   if len(t)>10:
-    print (depth, "{} attacks from letters {}".format(len(a), "-".join(set([w[1] for w in t]))))
+    print (depth, "{} attacks from letters {}".format(len(t), "-".join(set([w[0] for w in t]))))
   else:
     print (depth, t)
 
