@@ -13,8 +13,8 @@ def deepcopy(twod): # faster
   return [x[:] for x in twod]
 
 CUTOFF = 2       # ignore words shorter than this
-SPEEDCAP = 5000  # consider the X longest words per position
-JOKER_OFFSET = 4 # use jokers with word minimum length #
+SPEEDCAP = 50    # consider the X longest words per position
+JOKER_OFFSET = 1 # use jokers with word minimum length #
 
 NOBODY = 0
 US     = 1
@@ -337,6 +337,10 @@ def joker_check(jokers, chain, word):
       return False
   return True
 
+print("COMPLEXITY: {} words".format(len(wordindex)))
+SPEEDCAP = int(len(wordindex) / 30)
+jokers = {(y,x):"_" for y in range(sizey) for x in range(sizex) if letters[y][x]=="_"}
+
 def minmax(depth, owned, jokers, reverse=False, moves=[]):
   us, them = US, THEM
   if reverse:
@@ -415,12 +419,18 @@ def playout(play, playing, jokers, selected=-1, variant=-1):
       if selected==-1:
         print("{} variants to play {}. Append # + number to select.".format(len(chains), play))
         for i,chain in enumerate(chains):
+          cscore = 0
           print("{}: ".format(i), end='')
           for j,position in enumerate(chain):
+            cscore += score[position[0]][position[1]]
             if i>0 and chains[i-1][j] == position:
-              print("  --  , ", end='')
+              print("   --    | ", end='')
             else:
-              print("{}, ".format(position), end='')
+              space=' '
+              if position[0]>9: 
+                  space = '';
+              print(" {}{} | ".format(position,space), end='')
+          print(" value {}".format(cscore), end='')
           print()
         sys.exit(1)
 
@@ -457,8 +467,6 @@ def playout(play, playing, jokers, selected=-1, variant=-1):
     print("NOT MATCHED: '{}'".format(play))
     sys.exit(1)
 
-print("COMPLEXITY: {} words".format(len(wordindex)))
-jokers = {(y,x):"_" for y in range(sizey) for x in range(sizex) if letters[y][x]=="_"}
 
 playing = US
 if played:
