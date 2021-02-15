@@ -338,7 +338,7 @@ def joker_check(jokers, chain, word):
   return True
 
 print("COMPLEXITY: {} words".format(len(wordindex)))
-SPEEDCAP = int(len(wordindex) / 30)
+SPEEDCAP = int( 2500000 / len(wordindex))
 jokers = {(y,x):"_" for y in range(sizey) for x in range(sizex) if letters[y][x]=="_"}
 
 def minmax(depth, owned, jokers, reverse=False, moves=[]):
