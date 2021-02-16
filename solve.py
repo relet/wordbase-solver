@@ -12,9 +12,10 @@ import sys
 def deepcopy(twod): # faster
   return [x[:] for x in twod]
 
+DEPTH = 2        # minmax depth. 2 is good unless you have a lot of time
 CUTOFF = 2       # ignore words shorter than this
 SPEEDCAP = 50    # consider the X longest words per position
-JOKER_OFFSET = 1 # use jokers with word minimum length #
+JOKER_OFFSET = 4 # use jokers with word minimum length #
 
 NOBODY = 0
 US     = 1
@@ -90,7 +91,8 @@ def ccont(root):
 
 def continuable(root):
   if root[-1]=="_" and len(root)>=JOKER_OFFSET:
-    c.execute('select * from bits where bit > "%s" and bit <= "%s" and length(bit)=%i' % (root[:-1],root[:-1]+'Z',len(root)))
+    root_=root[:-1]
+    c.execute('select * from bits where bit > "%s" and bit <= "%sZ" and length(bit)=%i' % (root_,root_,len(root)))
   else:
     c.execute('select * from bits where bit = "%s" limit 1' % root)
   result = c.fetchall()
@@ -190,11 +192,16 @@ except Exception as e:
   pass
 
 if not restored:
+  complete = sizex * sizey
+  progress = 0
   for y in range(sizey):
     for x in range(sizex):
       words[y][x] = startsat(y,x,letters[y][x],[],register_np)
       words[y][x] = sorted(words[y][x], key=lambda x:len(x[0]), reverse=True)
       score[y][x] = len(words[y][x])
+
+      progress += 1
+      print("DETECTING WORDS: {:.1f}%".format(float(progress)*100/complete), end='\r')
 
   #add up to [NP_HIT_SCORE * distance to base] points for every NP hit
   for y in range(sizey):
@@ -339,6 +346,7 @@ def joker_check(jokers, chain, word):
 
 print("COMPLEXITY: {} words".format(len(wordindex)))
 SPEEDCAP = int( 2500000 / len(wordindex))
+print("Using a cap of {} words".format(SPEEDCAP))
 jokers = {(y,x):"_" for y in range(sizey) for x in range(sizex) if letters[y][x]=="_"}
 
 def minmax(depth, owned, jokers, reverse=False, moves=[]):
@@ -352,12 +360,20 @@ def minmax(depth, owned, jokers, reverse=False, moves=[]):
   moves_d = dict((x,True) for x in moves)
 
   loopgen = range(sizey) if reverse else range(sizey-1,-1,-1)
-  # iterate over the stronger (closer) moves first
-  #for y in range(sizey-1,-1,-1):
-  #for y in range(sizey):
+
+  if depth==DEPTH:
+    num_owned = sum([x==us for y in owned for x in y])
+    progress = 0
+    complete = sizex * sizey
+
   for y in loopgen:
     for x in range(sizex):
       if owned[y][x] == us:
+
+        if depth==DEPTH:
+          progress += 1
+          print("PROGRESS: {:.1f}%".format(float(progress)*100/num_owned), end='\r')
+
         for word,chain in words[y][x][:SPEEDCAP]:
           if len(word)<CUTOFF: continue  # FIXME confirm speedup?
           if word in moves_d: continue   # keep track of previous moves 
@@ -394,7 +410,6 @@ def minmax(depth, owned, jokers, reverse=False, moves=[]):
             rest = [best] + rest
             best = (rel_value, word, chain, opposite_move)
   
-
   return best
 
 def playout(play, playing, jokers, selected=-1, variant=-1):
@@ -501,7 +516,7 @@ print("PLAYS ===")
 
 round = 0
 if playing==THEM:
-  future = minmax(2, owned, jokers, reverse=True, moves=played_)
+  future = minmax(DEPTH, owned, jokers, reverse=True, moves=played_)
   if not future[3]:
     print(future)
   else:
@@ -511,7 +526,7 @@ if playing==THEM:
 
 moves = played_
 while True:
-  future = minmax(2, owned, jokers, moves=moves)
+  future = minmax(DEPTH, owned, jokers, moves=moves)
   rating, ours, ourchain, th = future[0], future[1], future[2], future[3]
   if not th or not th[2]:
     printboard (owned, ourchain, np)
