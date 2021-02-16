@@ -44,7 +44,7 @@ played       = [p.upper() for p in sys.argv[2:]]
 played_      = [p.split("#")[:1][0] for p in played] 
 played_d     = dict((x,True) for x in played_)
 
-conn = db.connect("%s.sqlite" % lang)
+conn = db.connect("{}.sqlite".format(lang))
 c    = conn.cursor()
 
 c.execute("select count(word) from words")
@@ -80,7 +80,7 @@ def getword(root):
   return wordindex.get(root,[]) 
 
 def beginable(root):
-  c.execute('select * from lastbits where bit = "%s" limit 1' % root)
+  c.execute("select * from lastbits where bit = '{}' limit 1".format(root))
   return c.fetchone() and True or False
 
 ccache = {}
@@ -92,20 +92,20 @@ def ccont(root):
 def continuable(root):
   if root[-1]=="_" and len(root)>=JOKER_OFFSET:
     root_=root[:-1]
-    c.execute('select * from bits where bit > "%s" and bit <= "%sZ" and length(bit)=%i' % (root_,root_,len(root)))
+    c.execute("select * from bits where bit > '{}' and bit <= '{}Z' and length(bit)={}".format(root_,root_,len(root)))
   else:
-    c.execute('select * from bits where bit = "%s" limit 1' % root)
+    c.execute("select * from bits where bit = '{}' limit 1".format(root))
   result = c.fetchall()
   return result and [x[1] for x in result]
 
 def exists(root):
   if len(root)>12: 
       return False
-  c.execute('select * from words where word = "%s" limit 1' % root)
+  c.execute("select * from words where word = '{}' limit 1".format(root))
   return c.fetchone() and True or False
 
 def resolve(root):
-  c.execute('select * from words where word like "%s" limit 1' % root)
+  c.execute("select * from words where word like '{}' limit 1".format(root))
   return c.fetchone()[1]
 
 def towards (y, x, root, chain):
@@ -132,6 +132,7 @@ def towards (y, x, root, chain):
 def startsat (y, x, root, chain, np_cb):
   if (y,x) in chain: return []
   chain = chain + [(y,x)] 
+
 
   found = []
   for dx in [-1,0,1]:
@@ -175,7 +176,7 @@ def register_np(root, chain, direction, y, x):
 
 restored = False
 try:
-  dump = open("games/%s.idx" % infile, "rb").read()
+  dump = open("games/{}.idx".format(infile), "rb").read()
   letters_, words_, score_, wordindex_, attacks_, threats_, np_, dictlen_ = cP.loads(dump)
   if letters_==letters:
     print("Word list restored from dump. yay.")
@@ -231,7 +232,7 @@ if not restored:
 
   # create a dump of the data structures - speedup for next run on the same table
   #
-  dump = open("games/%s.idx" % infile, "wb") 
+  dump = open("games/{}.idx".format(infile), "wb") 
   dump.write(cP.dumps((letters, words, score, wordindex, attacks, threats, np, dictlen)))
   dump.close()
 
@@ -372,9 +373,15 @@ def minmax(depth, owned, jokers, reverse=False, moves=[]):
 
         if depth==DEPTH:
           progress += 1
-          print("PROGRESS: {:.1f}%".format(float(progress)*100/num_owned), end='\r')
+          options = len(words[y][x][:SPEEDCAP])
+          print("PROGRESS: {:.1f}% - 0/{} options       ".format(float(progress)*100/num_owned, options), end='\r')
+          progress2 = 0
 
         for word,chain in words[y][x][:SPEEDCAP]:
+
+          if depth==DEPTH:
+            progress2 += 1
+            print("PROGRESS: {:.1f}% - {}/{} options    ".format(float(progress)*100/num_owned + float(progress2)/options, progress2, options), end='\r')
           if len(word)<CUTOFF: continue  # FIXME confirm speedup?
           if word in moves_d: continue   # keep track of previous moves 
           rel_value = 0
